@@ -7,8 +7,9 @@ import re
 
 # List your repos (update with yours)
 repos = [
-    'yourusername/PSv3.35',
-    'yourusername/oanda-bridge',
+    'oreliousw/aws-oanda',
+    'oreliousw/oanda-bridge',
+    'oreliousw/pine-scripts',
     # Add more: 'username/repo'
 ]
 
