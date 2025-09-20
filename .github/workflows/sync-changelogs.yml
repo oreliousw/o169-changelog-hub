@@ -2,7 +2,7 @@ name: Sync Changelogs to S3
 
 on:
 #automatic  push:
-    branches: [ main ]
+   # branches: [ main ]
   workflow_dispatch:  # Manual run
 
 jobs:
