@@ -1,0 +1,28 @@
+name: Sync Changelogs to S3
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Manual run
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: pip install requests beautifulsoup4 boto3
+
+    - name: Run Sync Script
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        S3_BUCKET: ${{ secrets.S3_BUCKET }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: python generate_changelogs.py
