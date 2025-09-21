@@ -7,6 +7,7 @@ import re
 
 # List your repos (update with yours)
 repos = [
+    
     'oreliousw/pine-scripts',
     'oreliousw/aws-oanda',
     'oreliousw/aws-testing',
@@ -105,7 +106,8 @@ html_content = html_template + tbody_rows + """
 with open('index.html', 'w') as f:
     f.write(html_content)
 
-# FIXED: Remove 'ACL' to avoid AccessControlListNotSupported error for buckets that don't support ACLs
-# Ensure your S3 bucket policy allows public reads if needed
+# FIXED: Completely remove 'ACL' parameter to resolve AccessControlListNotSupported
+# If public access is needed, configure it via bucket policy (see instructions below)
 s3.upload_file('index.html', bucket, 'index.html', ExtraArgs={'ContentType': 'text/html'})
+print(f"Synced to s3://{bucket}/index.html"))
 print(f"Synced to s3://{bucket}/index.html")
