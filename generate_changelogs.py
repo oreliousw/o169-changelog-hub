@@ -7,9 +7,8 @@ import re
 
 # List your repos (update with yours)
 repos = [
-    'oreliousw/aws-oanda',
-    'oreliousw/oanda-bridge',
-    'oreliousw/pine-scripts',
+    'yourusername/PSv3.35',
+    'yourusername/oanda-bridge',
     # Add more: 'username/repo'
 ]
 
@@ -45,14 +44,14 @@ html_template = """
     <meta charset="UTF-8">
     <title>O169 Changelog Hub</title>
     <style>
-        body {{ font-family: Arial, sans-serif; background: #f4f4f4; color: #333; margin: 20px; }}
-        h1 {{ color: #EE7C6B; text-align: center; }}
-        table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
-        th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
-        th {{ background: #EE7C6B; color: white; }}
-        .repo {{ font-weight: bold; color: #EE7C6B; }}
-        .version {{ font-size: 1.1em; }}
-        input[type="text"] {{ width: 100%; padding: 10px; margin-bottom: 10px; }}
+        body { font-family: Arial, sans-serif; background: #f4f4f4; color: #333; margin: 20px; }
+        h1 { color: #EE7C6B; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #EE7C6B; color: white; }
+        .repo { font-weight: bold; color: #EE7C6B; }
+        .version { font-size: 1.1em; }
+        input[type="text"] { width: 100%; padding: 10px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -93,9 +92,10 @@ html_content = html_template + tbody_rows + """
 </html>
 """
 
-# Write and upload
+# Write index.html
 with open('index.html', 'w') as f:
     f.write(html_content)
 
-s3.upload_file('index.html', bucket, 'index.html', ExtraArgs={'ContentType': 'text/html', 'ACL': 'public-read'})
+# FIXED: Remove 'ACL' to avoid AccessControlListNotSupported
+s3.upload_file('index.html', bucket, 'index.html', ExtraArgs={'ContentType': 'text/html'})
 print(f"Synced to s3://{bucket}/index.html")
