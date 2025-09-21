@@ -29,13 +29,21 @@ def parse_changelog(content):
     sections = re.split(r'^##\s+\[([^\]]+)\]', content, flags=re.MULTILINE)
     entries = []
     for i in range(1, len(sections), 2):
-        version = sections[i-1].strip() if i-1 < len(sections) else 'Unknown'
-        body = sections[i].strip()
-        date_match = re.search(r'\d{4}-\d{2}-\d{2}', body)
-        date = date_match.group() if date_match else 'N/A'
-        changes = re.sub(r'^\s*-?\s*', '', body, flags=re.MULTILINE).strip()[:200] + '...'  # Bullet points, truncate
+        if i + 1 >= len(sections):
+            break
+        version = sections[i].strip()
+        body = sections[i + 1].strip()
+        lines = body.splitlines()
+        date = 'N/A'
+        changes_body = body
+        if lines:
+            date_match = re.search(r'\d{4}-\d{2}-\d{2}', lines[0])
+            if date_match:
+                date = date_match.group()
+                changes_body = '\n'.join(lines[1:]).strip()
+        changes = re.sub(r'^\s*-?\s*', '', changes_body, flags=re.MULTILINE).strip()[:200] + '...'
         entries.append({'version': version, 'date': date, 'changes': changes})
-    return entries[-3:]  # Last 3 versions
+    return entries[:3]  # First 3 versions (newest, assuming CHANGELOG has newest first)
 
 html_template = """
 <!DOCTYPE html>
@@ -96,6 +104,9 @@ html_content = html_template + tbody_rows + """
 with open('index.html', 'w') as f:
     f.write(html_content)
 
+# FIXED: Remove 'ACL' to avoid AccessControlListNotSupported
+s3.upload_file('index.html', bucket, 'index.html', ExtraArgs={'ContentType': 'text/html'})
+print(f"Synced to s3://{bucket}/index.html")
 # FIXED: Remove 'ACL' to avoid AccessControlListNotSupported
 s3.upload_file('index.html', bucket, 'index.html', ExtraArgs={'ContentType': 'text/html'})
 print(f"Synced to s3://{bucket}/index.html")
