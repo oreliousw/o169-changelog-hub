@@ -1,13 +1,12 @@
 import requests
 import boto3
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup  # Unused in current script; remove if not needed
 from datetime import datetime
 import os
 import re
 
 # List your repos (update with yours)
 repos = [
-    
     'oreliousw/pine-scripts',
     'oreliousw/aws-oanda',
     'oreliousw/aws-testing',
@@ -26,7 +25,7 @@ def fetch_changelog(repo):
     return response.text if response.status_code == 200 else None
 
 def parse_changelog(content):
-    if not content:
+    if not content or content.strip() == '----------------------------------------------------------------------------------------------------':
         return []
     sections = re.split(r'^##\s+\[([^\]]+)\]', content, flags=re.MULTILINE)
     entries = []
@@ -39,11 +38,15 @@ def parse_changelog(content):
         date = 'N/A'
         changes_body = body
         if lines:
-            date_match = re.search(r'\d{4}-\d{2}-\d{2}', lines[0])
+            # More flexible date matching (YYYY-MM-DD or Month DD, YYYY)
+            date_match = re.search(r'\d{4}-\d{2}-\d{2}|\w+\s+\d{1,2},?\s+\d{4}', lines[0])
             if date_match:
                 date = date_match.group()
                 changes_body = '\n'.join(lines[1:]).strip()
-        changes = re.sub(r'^\s*-?\s*', '', changes_body, flags=re.MULTILINE).strip()[:200] + '...'
+        # Clean up bullet points and limit to 200 chars
+        changes = re.sub(r'^\s*-?\s*', '', changes_body, flags=re.MULTILINE).strip()
+        if len(changes) > 200:
+            changes = changes[:200] + '...'
         entries.append({'version': version, 'date': date, 'changes': changes})
     return entries[:3]  # First 3 versions (newest, assuming CHANGELOG has newest first)
 
@@ -62,6 +65,7 @@ html_template = """
         .repo { font-weight: bold; color: #EE7C6B; }
         .version { font-size: 1.1em; }
         input[type="text"] { width: 100%; padding: 10px; margin-bottom: 10px; }
+        .empty { text-align: center; color: #999; font-style: italic; }
     </style>
 </head>
 <body>
@@ -74,9 +78,11 @@ html_template = """
 """.format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
 tbody_rows = ""
+all_entries = 0
 for repo in repos:
     content = fetch_changelog(repo)
     entries = parse_changelog(content)
+    all_entries += len(entries)
     for entry in entries:
         tbody_rows += f"""
         <tr>
@@ -86,6 +92,9 @@ for repo in repos:
             <td>{entry['changes']}</td>
         </tr>
         """
+
+if not all_entries:
+    tbody_rows += '<tr><td colspan="4" class="empty">No changelog entries found. Add repos with CHANGELOG.md!</td></tr>'
 
 html_content = html_template + tbody_rows + """
         </tbody>
@@ -106,8 +115,9 @@ html_content = html_template + tbody_rows + """
 with open('index.html', 'w') as f:
     f.write(html_content)
 
-# FIXED: Completely remove 'ACL' parameter to resolve AccessControlListNotSupported
-# If public access is needed, configure it via bucket policy (see instructions below)
-s3.upload_file('index.html', bucket, 'index.html', ExtraArgs={'ContentType': 'text/html'})
-print(f"Synced to s3://{bucket}/index.html"))
-print(f"Synced to s3://{bucket}/index.html")
+# Upload to S3 with error handling
+try:
+    s3.upload_file('index.html', bucket, 'index.html', ExtraArgs={'ContentType': 'text/html'})
+    print(f"Synced to s3://{bucket}/index.html")
+except Exception as e:
+    print(f"Upload failed: {e}")
